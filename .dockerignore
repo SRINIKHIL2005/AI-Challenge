@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+.git/
+expanded_dataset/
+*.pyc
+*.pyo
+*.pyd
