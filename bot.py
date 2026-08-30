@@ -677,17 +677,37 @@ class BotHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
     server_version = "VeraChallengeBot/1.0"
 
-    def log_message(self, format: str, *args: Any) -> None:  # noqa: A003
+    def log_message(self, format, *args):
+        print(f"[HTTP] {self.address_string()} - {format % args}", flush=True)
+
+def do_GET(self) -> None:
+    if self.path == "/":
+        json_response(
+            self,
+            200,
+            {
+                "service": "Vera AI Challenge Bot",
+                "status": "running",
+                "endpoints": [
+                    "/v1/healthz",
+                    "/v1/metadata",
+                    "/v1/context",
+                    "/v1/tick",
+                    "/v1/reply"
+                ]
+            }
+        )
         return
 
-    def do_GET(self) -> None:  # noqa: N802
-        if self.path == "/v1/healthz":
-            self.handle_healthz()
-            return
-        if self.path == "/v1/metadata":
-            self.handle_metadata()
-            return
-        json_response(self, 404, {"error": "not_found"})
+    if self.path == "/v1/healthz":
+        self.handle_healthz()
+        return
+
+    if self.path == "/v1/metadata":
+        self.handle_metadata()
+        return
+
+    json_response(self, 404, {"error": "not_found"})
 
     def do_POST(self) -> None:  # noqa: N802
         if self.path == "/v1/context":
@@ -835,7 +855,8 @@ def main() -> None:
     for port in port_candidates:
         try:
             server = ThreadingHTTPServer((host, port), BotHandler)
-            print(f"Vera bot listening on http://{host}:{port}")
+            print(f"Vera bot listening on http://{host}:{port}", flush=True)
+            print("Registered routes: / /v1/healthz /v1/metadata /v1/context /v1/tick /v1/reply", flush=True)          
             try:
                 server.serve_forever()
             except KeyboardInterrupt:
