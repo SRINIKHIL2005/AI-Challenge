@@ -677,50 +677,70 @@ class BotHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
     server_version = "VeraChallengeBot/1.0"
 
-    def log_message(self, format, *args):
+    def log_message(self, format: str, *args: Any) -> None:
         print(f"[HTTP] {self.address_string()} - {format % args}", flush=True)
 
-def do_GET(self) -> None:
-    if self.path == "/":
-        json_response(
-            self,
-            200,
-            {
-                "service": "Vera AI Challenge Bot",
-                "status": "running",
-                "endpoints": [
-                    "/v1/healthz",
-                    "/v1/metadata",
-                    "/v1/context",
-                    "/v1/tick",
-                    "/v1/reply"
-                ]
-            }
-        )
-        return
+    def do_HEAD(self) -> None:
+        if self.path == "/":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            return
 
-    if self.path == "/v1/healthz":
-        self.handle_healthz()
-        return
+        if self.path == "/v1/healthz":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            return
 
-    if self.path == "/v1/metadata":
-        self.handle_metadata()
-        return
+        self.send_response(404)
+        self.end_headers()
 
-    json_response(self, 404, {"error": "not_found"})
+    def do_GET(self) -> None:
+        print(f"[DEBUG] GET received: {self.path}", flush=True)
 
-    def do_POST(self) -> None:  # noqa: N802
+        if self.path == "/":
+            json_response(
+                self,
+                200,
+                {
+                    "service": "Vera AI Challenge Bot",
+                    "status": "running",
+                    "endpoints": [
+                        "/v1/healthz",
+                        "/v1/metadata",
+                        "/v1/context",
+                        "/v1/tick",
+                        "/v1/reply",
+                    ],
+                },
+            )
+            return
+
+        if self.path == "/v1/healthz":
+            self.handle_healthz()
+            return
+
+        if self.path == "/v1/metadata":
+            self.handle_metadata()
+            return
+
+        json_response(self, 404, {"error": "not_found"})
+    def do_POST(self) -> None:
         if self.path == "/v1/context":
             self.handle_context()
             return
+
         if self.path == "/v1/tick":
             self.handle_tick()
             return
+
         if self.path == "/v1/reply":
             self.handle_reply()
             return
-        json_response(self, 404, {"error": "not_found"})
 
+        json_response(self, 404, {"error": "not_found"})
+    
     def read_json(self) -> dict[str, Any]:
         length = int(self.headers.get("Content-Length", "0") or 0)
         raw = self.rfile.read(length) if length else b"{}"
